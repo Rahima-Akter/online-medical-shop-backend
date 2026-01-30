@@ -3,6 +3,8 @@ import cors from "cors";
 import { prisma } from "./lib/prisma";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
+import { medicineRouter } from "./modules/medicine/medicine.route";
+import { categoryRouter } from "./modules/category/medicine.route";
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -18,6 +20,10 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.get("/", (req: Request, res: Response) => {
   res.send("server is running");
 });
+
+app.use('/api/medicine', medicineRouter)
+app.use('/api/category', categoryRouter)
+
 // since CUSTOMER & SELLER role can be chosen while register that why we have to force our own register route to be able to create an account that prevents from choosing ADMIN as role
 app.post("/register", express.json(), async (req, res) => {
   const {

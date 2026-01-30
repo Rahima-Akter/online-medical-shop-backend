@@ -33,7 +33,6 @@ enum OrderStatus {
 }
 
 // MEDICINE
-
 model Medicine {
   id                   String   @id @default(uuid())
   name                 String
@@ -61,7 +60,6 @@ model Medicine {
 }
 
 // CATEGORY
-
 model Category {
   id        String     @id @default(uuid())
   name      String     @unique
@@ -72,7 +70,6 @@ model Category {
 }
 
 // ORDER (PERMANENT)
-
 model Order {
   id              String      @id @default(uuid())
   customerId      String
@@ -86,7 +83,6 @@ model Order {
 }
 
 // ORDER ITEM
-
 model OrderItem {
   id         String @id @default(uuid())
   orderId    String
@@ -102,7 +98,6 @@ model OrderItem {
 }
 
 // CART ITEM (TEMPORARY)
-
 model CartItem {
   id         String   @id @default(uuid())
   userId     String
