@@ -33,6 +33,7 @@ enum OrderStatus {
 }
 
 // MEDICINE
+
 model Medicine {
   id                   String   @id @default(uuid())
   name                 String
@@ -60,6 +61,7 @@ model Medicine {
 }
 
 // CATEGORY
+
 model Category {
   id        String     @id @default(uuid())
   name      String     @unique
@@ -70,6 +72,7 @@ model Category {
 }
 
 // ORDER (PERMANENT)
+
 model Order {
   id              String      @id @default(uuid())
   customerId      String
@@ -83,6 +86,7 @@ model Order {
 }
 
 // ORDER ITEM
+
 model OrderItem {
   id         String @id @default(uuid())
   orderId    String
@@ -98,6 +102,7 @@ model OrderItem {
 }
 
 // CART ITEM (TEMPORARY)
+
 model CartItem {
   id         String   @id @default(uuid())
   userId     String
@@ -109,10 +114,12 @@ model CartItem {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   medicine Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, medicineId]) // one medicine per user cart
+  // one medicine per user cart
+  @@unique([userId, medicineId])
 }
 
 // REVIEW
+
 model Review {
   id         String   @id @default(uuid())
   customerId String
@@ -125,7 +132,8 @@ model Review {
   customer User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
   medicine Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
 
-  @@unique([customerId, medicineId]) // one review per product per customer
+  // one review per product per customer
+  @@unique([customerId, medicineId])
 }
 
 model User {
@@ -146,8 +154,8 @@ model User {
   status UserStatus @default(ACTIVE)
 
   phone_number             String?
-  date_of_birth            DateTime?
-  default_shipping_address String?
+  date_of_birth            DateTime
+  default_shipping_address String
 
   banned     Boolean?  @default(false)
   banReason  String?
@@ -157,8 +165,10 @@ model User {
   medicines  Medicine[]  @relation("SellerMedicines")
   orders     Order[]     @relation("CustomerOrders")
   orderItems OrderItem[] @relation("SellerOrderItems")
-  cartItems  CartItem[]  
-  reviews    Review[]    
+  cartItems  CartItem[]
+  reviews    Review[]
+
+  blood_type String?
 
   @@map("user")
 }

@@ -14,10 +14,6 @@ export const auth = betterAuth({
         defaultValue: "CUSTOMER",
         required: true,
       },
-      status: {
-        type: 'string',
-        required:false
-      },
       phone_number: {
         type: "string",
         required: false,
@@ -37,10 +33,11 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    admin({
-      defaultRole: "CUSTOMER",
-    }),
+    // admin({
+    //   defaultRole: "CUSTOMER",
+    // }),
   ],
+  emailAndPassword: {
+    enabled: true,
+  },
 });
-
-
