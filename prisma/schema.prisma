@@ -13,11 +13,11 @@ datasource db {
   provider = "postgresql"
 }
 
-// enum UserRoles {
-//   CUSTOMER
-//   SELLER
-//   ADMIN
-// }
+enum UserRoles {
+  CUSTOMER
+  SELLER
+  ADMIN
+}
 
 model User {
   id            String    @id
