@@ -18,8 +18,6 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 app.get("/", (req: Request, res: Response) => {
   res.send("server is running");
 });
-
-
 // since CUSTOMER & SELLER role can be chosen while register that why we have to force our own register route to be able to create an account that prevents from choosing ADMIN as role
 app.post("/register", express.json(), async (req, res) => {
   const {
@@ -66,7 +64,7 @@ async function main() {
   try {
     await prisma.$connect();
     console.log("Connected to the database successfully.");
-    app.listen(port, () => {
+    app.listen(port, async () => {
       console.log(`server is running on port: http://localhost:${port}`);
     });
   } catch (err) {
