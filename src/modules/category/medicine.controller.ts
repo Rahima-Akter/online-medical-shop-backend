@@ -31,6 +31,36 @@ const addCategory = async (req: Request, res: Response) => {
     });
   }
 };
+const getAllCategory = async (req: Request, res: Response) => {
+  try {
+    const role = req.user?.role;
+    if (role !== userRole.ADMIN) {
+      return res.status(403).json({
+        msg: "YOU ARE NOT ALLOWED!",
+      });
+    }
+
+    const result = await categoryService.getAllCategory();
+
+    if (!result) {
+      res.status(400).json({
+        msg: "Faild to fatch!",
+        data: result,
+      });
+    }
+
+    res.status(200).json({
+      msg: "Categorys Fatched",
+      data: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      msg: "something went wrong",
+      err: err instanceof Error ? err.message : "Internal Server Error!",
+    });
+  }
+};
+
 const changeStatus = async (req: Request, res: Response) => {
   try {
     const role = req.user?.role;
@@ -70,7 +100,47 @@ const changeStatus = async (req: Request, res: Response) => {
   }
 };
 
+const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const role = req.user?.role;
+    const id = req.params.id as string;
+
+    if (role !== userRole.ADMIN) {
+      return res.status(403).json({
+        msg: "YOU ARE NOT ALLOWED!",
+      });
+    }
+
+    if (!id) {
+      return res.status(404).json({
+        msg: `ID:${id} NOT FOUND!`,
+      });
+    }
+
+    const result = await categoryService.deleteCategory(id);
+
+    if (!result) {
+      res.status(400).json({
+        msg: "Action Faild!",
+        data: result,
+      });
+    }
+
+    res.status(200).json({
+      msg: "Category Deleted",
+      data: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      msg: "something went wrong",
+      err: err instanceof Error ? err.message : "Internal Server Error!",
+    });
+  }
+};
+
 export const categoryController = {
   addCategory,
   changeStatus,
+  getAllCategory,
+  deleteCategory,
 };

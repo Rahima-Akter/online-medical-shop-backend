@@ -53,7 +53,29 @@ const changeStatus = async (id: string, name?: string, status?: boolean) => {
   });
 };
 
+const getAllCategory = async () => {
+  return await prisma.category.findMany();
+};
+
+const deleteCategory = async (id: string) => {
+  const isExists = await prisma.category.findUnique({
+    where: { id },
+    select: { name: true },
+  });
+
+  if (!isExists) {
+    throw new Error(`category with ID: ${id} doesn't exists!`);
+  }
+
+  return await prisma.category.delete({
+    where: { id },
+    select: { name: true },
+  });
+};
+
 export const categoryService = {
   addCategory,
   changeStatus,
+  getAllCategory,
+  deleteCategory
 };
