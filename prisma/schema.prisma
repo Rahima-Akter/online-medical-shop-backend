@@ -57,6 +57,11 @@ model Medicine {
   cartItems  CartItem[]
   orderItems OrderItem[]
   reviews    Review[]
+
+  @@index([name])
+  @@index([price])
+  @@index([categoryId])
+  @@index([manufacturer])
 }
 
 // CATEGORY
