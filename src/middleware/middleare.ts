@@ -22,6 +22,7 @@ export enum userRole {
 
 const middleware = (...roles: userRole[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
+    // console.log("from middleware:", req.user?.role)
     try {
       // get logged-in user session
       const session = await auth.api.getSession({

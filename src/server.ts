@@ -6,6 +6,9 @@ import { auth } from "./lib/auth";
 import { medicineRouter } from "./modules/medicine/medicine.route";
 import { categoryRouter } from "./modules/category/category.route";
 import { reviewRouter } from "./modules/review/review.route";
+import { userRouter } from "./modules/user/user.route";
+import { orderRouter } from "./modules/order/order.route";
+import { cartRouter } from "./modules/cart/cart.route";
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -22,29 +25,31 @@ app.get("/", (req: Request, res: Response) => {
   res.send("server is running");
 });
 
-app.use('/api/medicine', medicineRouter)
-app.use('/api/category', categoryRouter)
-app.use('/api/review', reviewRouter)
-
+app.use("/api/medicine", medicineRouter);
+app.use("/api/category", categoryRouter);
+app.use("/api/review", reviewRouter);
+app.use("/api/user", userRouter);
+app.use("/api/order", orderRouter);
+app.use("/api/cart", cartRouter);
 
 // since CUSTOMER & SELLER role can be chosen while register that why we have to force our own register route to be able to create an account that prevents from choosing ADMIN as role
 app.post("/register", express.json(), async (req, res) => {
   const {
     email,
     password,
+    image,
     name,
     role,
     date_of_birth,
     default_shipping_address,
   } = req.body;
 
-  // Only allow CUSTOMER or SELLER
   if (!["CUSTOMER", "SELLER"].includes(role)) {
     return res.status(400).json({ error: "Role must be CUSTOMER or SELLER" });
   }
 
   try {
-    // Sign up via BetterAuth
+    // Sign using BetterAuth endpoint
     const result = await fetch("http://localhost:5000/api/auth/sign-up/email", {
       method: "POST",
       headers: {
@@ -54,6 +59,7 @@ app.post("/register", express.json(), async (req, res) => {
       body: JSON.stringify({
         email,
         password,
+        image,
         name,
         date_of_birth,
         default_shipping_address,
