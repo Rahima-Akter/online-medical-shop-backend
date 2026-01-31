@@ -5,6 +5,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { medicineRouter } from "./modules/medicine/medicine.route";
 import { categoryRouter } from "./modules/category/medicine.route";
+import { reviewRouter } from "./modules/review/review.route";
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -23,6 +24,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use('/api/medicine', medicineRouter)
 app.use('/api/category', categoryRouter)
+app.use('/api/review', reviewRouter)
 
 
 // since CUSTOMER & SELLER role can be chosen while register that why we have to force our own register route to be able to create an account that prevents from choosing ADMIN as role

@@ -120,6 +120,9 @@ const getAllMedicine = async (query: any) => {
 const getSingleMedicine = async (id: string) => {
   const medicine = await prisma.medicine.findUnique({
     where: { id },
+    include: {
+      reviews: true
+    }
   });
 
   if (!medicine) {
