@@ -4,12 +4,23 @@ import { userRole } from "../../middleware/middleare";
 
 const addMedicine = async (req: Request, res: Response) => {
   try {
-    const role = req.user?.role;
-    if (role !== userRole.SELLER && role !== userRole.ADMIN) {
-      return res.status(403).json({ msg: "YOU ARE NOT ALLOWED!" });
+    const loggedInUser = req.user; 
+    const sellerId = req.body.sellerId;
+
+    if (loggedInUser?.role !== userRole.SELLER) {
+      return res.status(403).json({ msg: "Only sellers can add medicines!" });
+    }
+
+    if (loggedInUser.id !== sellerId) {
+      return res.status(403).json({ msg: "You can only add medicine for yourself!" });
     }
 
     const result = await medicineService.addMedicine(req.body);
+    if (!result) {
+      return res.status(400).json({
+        msg: "Failed to add medicine!",
+      });
+    }
 
     res.status(201).json({
       msg: "Medicine Added",
@@ -23,6 +34,7 @@ const addMedicine = async (req: Request, res: Response) => {
   }
 };
 
+
 const updateMedicine = async (req: Request, res: Response) => {
   try {
     const role = req.user?.role;
@@ -34,8 +46,11 @@ const updateMedicine = async (req: Request, res: Response) => {
 
     const result = await medicineService.updateMedicine(id, req.body);
 
-    
-
+    if (!result) {
+      return res.status(400).json({
+        msg: "Failed to Updated medicine!",
+      });
+    }
 
     res.status(200).json({
       msg: "Medicine Updated",
@@ -60,6 +75,12 @@ const deleteMedicine = async (req: Request, res: Response) => {
 
     const result = await medicineService.deleteMedicine(id);
 
+    if (!result) {
+      return res.status(400).json({
+        msg: "Failed to delete medicine!",
+      });
+    }
+
     res.status(200).json({
       msg: "Medicine Deleted",
       data: result,
@@ -76,6 +97,12 @@ const deleteMedicine = async (req: Request, res: Response) => {
 const getAllMedicine = async (req: Request, res: Response) => {
   try {
     const result = await medicineService.getAllMedicine(req.query);
+
+    if (!result) {
+      return res.status(400).json({
+        msg: "Failed fetch medicine!",
+      });
+    }
 
     res.status(200).json({
       msg: "Medicines Fetched",
@@ -94,6 +121,12 @@ const getSingleMedicine = async (req: Request, res: Response) => {
     const id = req.params.id as string;
 
     const result = await medicineService.getSingleMedicine(id);
+
+    if (!result) {
+      return res.status(400).json({
+        msg: "Failed fetch medicine!",
+      });
+    }
 
     res.status(200).json({
       msg: "Medicine Details",

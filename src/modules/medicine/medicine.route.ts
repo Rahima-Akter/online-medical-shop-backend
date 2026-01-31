@@ -9,7 +9,7 @@ router.get("/", medicineController.getAllMedicine);
 router.get("/:id", medicineController.getSingleMedicine);
 
 
-router.post("/", middleware(userRole.SELLER, userRole.ADMIN), medicineController.addMedicine);
+router.post("/", middleware(userRole.SELLER), medicineController.addMedicine);
 router.patch("/:id", middleware(userRole.SELLER, userRole.ADMIN), medicineController.updateMedicine);
 router.delete("/:id", middleware(userRole.SELLER, userRole.ADMIN), medicineController.deleteMedicine);
 

@@ -24,6 +24,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use('/api/medicine', medicineRouter)
 app.use('/api/category', categoryRouter)
 
+
 // since CUSTOMER & SELLER role can be chosen while register that why we have to force our own register route to be able to create an account that prevents from choosing ADMIN as role
 app.post("/register", express.json(), async (req, res) => {
   const {

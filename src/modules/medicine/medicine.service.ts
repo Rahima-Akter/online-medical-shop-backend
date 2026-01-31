@@ -1,9 +1,36 @@
 import { prisma } from "../../lib/prisma";
 import { Medicine } from "../../../generated/prisma/client";
+import { userRole } from "../../middleware/middleare";
 
 // Add Medicine
 const addMedicine = async (payload: Medicine) => {
-  const isExists = await prisma.medicine.findUnique({
+  const findSeller = await prisma.user.findUnique({
+    where: { id: payload.sellerId },
+    select: { id: true, name: true, role: true },
+  });
+
+  if (!findSeller) {
+    throw new Error(`Seller with ID: ${payload.sellerId} doesn't exist`);
+  }
+
+  if (findSeller.role !== userRole.SELLER) {
+    throw new Error("Only SELLER can add medicine");
+  }
+
+  if (findSeller.id !== payload.sellerId) {
+    throw new Error("Seller can only add medicine for themselves");
+  }
+
+  const findCategory = await prisma.category.findUnique({
+    where: { id: payload.categoryId },
+    select: { name: true },
+  });
+
+  if (!findCategory) {
+    throw new Error(`Category with ID: ${payload.categoryId} doesn't exist`);
+  }
+
+  const isExists = await prisma.medicine.findFirst({
     where: {
       name: payload.name,
     },
@@ -18,7 +45,7 @@ const addMedicine = async (payload: Medicine) => {
   });
 };
 
-// UPDATE (partial update)
+// UPDATE
 const updateMedicine = async (id: string, payload: Partial<Medicine>) => {
   const isExists = await prisma.medicine.findUnique({
     where: { id },
@@ -52,24 +79,32 @@ const deleteMedicine = async (id: string) => {
   });
 };
 
-// PUBLIC - GET ALL + FILTER
+// GET ALL
 const getAllMedicine = async (query: any) => {
-  const { categoryId, manufacturer, minPrice, maxPrice } = query;
+  const { name, categoryId, manufacturer, minPrice, maxPrice } = query;
+
+  let priceFilter: any = {};
+
+  if (minPrice !== undefined) {
+    priceFilter.gte = Number(minPrice);
+  }
+
+  if (maxPrice !== undefined) {
+    priceFilter.lte = Number(maxPrice);
+  }
 
   return await prisma.medicine.findMany({
     where: {
+      name: name || undefined,
       categoryId: categoryId || undefined,
       manufacturer: manufacturer || undefined,
-      price: {
-        gte: minPrice ? Number(minPrice) : undefined,
-        lte: maxPrice ? Number(maxPrice) : undefined,
-      },
+      price: priceFilter.gte || priceFilter.lte ? priceFilter : undefined,
       isActive: true,
     },
   });
 };
 
-// PUBLIC - GET SINGLE
+// GET SINGLE
 const getSingleMedicine = async (id: string) => {
   const medicine = await prisma.medicine.findUnique({
     where: { id },
