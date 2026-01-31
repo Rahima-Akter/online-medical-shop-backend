@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { categoryService } from "./medicine.service";
+import { categoryService } from "./category.service";
 import { userRole } from "../../middleware/middleare";
 
 const addCategory = async (req: Request, res: Response) => {
@@ -40,7 +40,7 @@ const getAllCategory = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await categoryService.getAllCategory();
+    const result = await categoryService.getAllCategory(req.query);
 
     if (!result) {
       res.status(400).json({

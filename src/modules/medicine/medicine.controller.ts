@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { medicineService } from "./medicine.service";
 import { userRole } from "../../middleware/middleare";
+import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper";
 
 const addMedicine = async (req: Request, res: Response) => {
   try {
-    const loggedInUser = req.user; 
+    const loggedInUser = req.user;
     const sellerId = req.body.sellerId;
 
     if (loggedInUser?.role !== userRole.SELLER) {
@@ -12,7 +13,9 @@ const addMedicine = async (req: Request, res: Response) => {
     }
 
     if (loggedInUser.id !== sellerId) {
-      return res.status(403).json({ msg: "You can only add medicine for yourself!" });
+      return res
+        .status(403)
+        .json({ msg: "You can only add medicine for yourself!" });
     }
 
     const result = await medicineService.addMedicine(req.body);
@@ -33,7 +36,6 @@ const addMedicine = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 const updateMedicine = async (req: Request, res: Response) => {
   try {
@@ -96,7 +98,17 @@ const deleteMedicine = async (req: Request, res: Response) => {
 // PUBLIC
 const getAllMedicine = async (req: Request, res: Response) => {
   try {
-    const result = await medicineService.getAllMedicine(req.query);
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(
+      req.query,
+    );
+    const result = await medicineService.getAllMedicine(
+      req.query,
+      page,
+      limit,
+      skip,
+      sortBy,
+      sortOrder,
+    );
 
     if (!result) {
       return res.status(400).json({

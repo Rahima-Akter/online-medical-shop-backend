@@ -1,4 +1,5 @@
 import { Category } from "../../../generated/prisma/client";
+import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper";
 import { prisma } from "../../lib/prisma";
 
 const addCategory = async (payload: Category) => {
@@ -53,8 +54,46 @@ const changeStatus = async (id: string, name?: string, status?: boolean) => {
   });
 };
 
-const getAllCategory = async () => {
-  return await prisma.category.findMany();
+const getAllCategory = async (query: any) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationAndSortingHelper(query);
+  const { isActive } = query;
+
+  const where: any = {};
+
+  // if (isActive === "true") {
+  //   where.isActive = true;
+  // }
+
+  // if (isActive === "false") {
+  //   where.isActive = false;
+  // }
+
+  if (isActive !== undefined) {
+    where.isActive = isActive === "true";
+  }
+
+  const result = await prisma.category.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
+  });
+
+  const total = await prisma.category.count({
+    where,
+  });
+
+  return {
+    Data: result,
+    total,
+    skip,
+    limit,
+    currentPage: page,
+    totalPage: Math.ceil(total / limit),
+  };
 };
 
 const deleteCategory = async (id: string) => {
@@ -77,5 +116,5 @@ export const categoryService = {
   addCategory,
   changeStatus,
   getAllCategory,
-  deleteCategory
+  deleteCategory,
 };

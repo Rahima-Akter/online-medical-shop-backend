@@ -1,6 +1,6 @@
 import { Router } from "express";
 import middleware, { userRole } from "../../middleware/middleare";
-import { categoryController } from "./medicine.controller";
+import { categoryController } from "./category.controller";
 
 const router = Router();
 

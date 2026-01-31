@@ -80,7 +80,14 @@ const deleteMedicine = async (id: string) => {
 };
 
 // GET ALL
-const getAllMedicine = async (query: any) => {
+const getAllMedicine = async (
+  query: any,
+  page: number,
+  limit: number,
+  skip: number,
+  sortBy: string,
+  sortOrder: string,
+) => {
   const { name, categoryId, manufacturer, minPrice, maxPrice } = query;
 
   let priceFilter: any = {};
@@ -110,10 +117,24 @@ const getAllMedicine = async (query: any) => {
     where.price = priceFilter;
   }
 
-  return await prisma.medicine.findMany({
+  const result = await prisma.medicine.findMany({
     where,
+    skip,
+    take: limit,
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
   });
-  
+  const totalMed = await prisma.medicine.count({
+    where
+  });
+  return {
+    Data:result,
+    total: totalMed,
+    currentPage: page,
+    limit,
+    totalPages: Math.ceil(page / limit),
+  };
 };
 
 // GET SINGLE
@@ -121,8 +142,8 @@ const getSingleMedicine = async (id: string) => {
   const medicine = await prisma.medicine.findUnique({
     where: { id },
     include: {
-      reviews: true
-    }
+      reviews: true,
+    },
   });
 
   if (!medicine) {

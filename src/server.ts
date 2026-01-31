@@ -4,7 +4,7 @@ import { prisma } from "./lib/prisma";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { medicineRouter } from "./modules/medicine/medicine.route";
-import { categoryRouter } from "./modules/category/medicine.route";
+import { categoryRouter } from "./modules/category/category.route";
 import { reviewRouter } from "./modules/review/review.route";
 const app = express();
 const port = process.env.PORT || 5000;
