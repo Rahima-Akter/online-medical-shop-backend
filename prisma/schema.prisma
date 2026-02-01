@@ -81,6 +81,7 @@ model Order {
   status          OrderStatus @default(PLACED)
   shippingAddress String?
   totalPrice      Float
+  deliveryCharge  Int         @default(100)
   createdAt       DateTime    @default(now())
 
   // Relations

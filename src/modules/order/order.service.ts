@@ -3,12 +3,17 @@ import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper"
 import { prisma } from "../../lib/prisma";
 import { userRole } from "../../middleware/middleare";
 
-export const createOrder = async (customerId: string, items: any[], shippingAddress: string) => {
+export const createOrder = async (
+  customerId: string,
+  items: any[],
+  shippingAddress: string,
+) => {
   if (!items || items.length === 0) {
     throw new Error("Order must have at least one item");
   }
 
   let totalAmount = 0;
+  const deliveryCharge = 100;
 
   const orderItems = items.map(async (item) => {
     const medicine = await prisma.medicine.findUnique({
@@ -30,6 +35,8 @@ export const createOrder = async (customerId: string, items: any[], shippingAddr
     };
   });
 
+  totalAmount = totalAmount + deliveryCharge;
+
   const orderItemsPromise = await Promise.all(orderItems);
 
   const order = await prisma.order.create({
@@ -37,9 +44,9 @@ export const createOrder = async (customerId: string, items: any[], shippingAddr
       customerId,
       shippingAddress: shippingAddress,
       totalPrice: totalAmount,
-      status: OrderStatus.PLACED,  
+      status: OrderStatus.PLACED,
       items: {
-        create: orderItemsPromise, 
+        create: orderItemsPromise,
       },
     },
     include: {
@@ -165,7 +172,7 @@ const getSingleOrder = async (
   if (!order) return null;
 
   if (role === userRole.ADMIN) {
-    return order; 
+    return order;
   }
 
   if (role === userRole.SELLER) {
@@ -178,7 +185,7 @@ const getSingleOrder = async (
   }
 
   if (role === userRole.CUSTOMER && order.customerId === userId) {
-    return order; 
+    return order;
   }
 
   return null;
@@ -227,7 +234,11 @@ const updateOrderStatus = async (
   }
 
   // check customer
-  if ( role === userRole.CUSTOMER && order.customerId === userId && status === OrderStatus.CANCELLED ) {
+  if (
+    role === userRole.CUSTOMER &&
+    order.customerId === userId &&
+    status === OrderStatus.CANCELLED
+  ) {
     // Add stock back to the medicines in the cancelled order
     for (const item of order.items) {
       await prisma.medicine.update({
@@ -248,7 +259,6 @@ const updateOrderStatus = async (
 
   return null;
 };
-
 
 export const orderService = {
   createOrder,

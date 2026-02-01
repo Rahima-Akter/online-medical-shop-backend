@@ -35,13 +35,13 @@ const getAllOrders = async (req: Request, res: Response) => {
     const userId = req.user?.id; 
     const role = req.user?.role as userRole;
 
-    const orders = await orderService.getAllOrders(
+    const result = await orderService.getAllOrders(
       role,
       userId as string,
       req.query,
     );
 
-    return res.status(200).json(orders);
+    return res.status(200).json(result);
   } catch (err) {
     res.status(500).json({
       msg: "Something went wrong",
@@ -56,17 +56,17 @@ const getSingleOrder = async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const role = req.user?.role as userRole;
 
-    const order = await orderService.getSingleOrder(
+    const result = await orderService.getSingleOrder(
       id as string,
       userId as string,
       role,
     );
 
-    if (!order) {
+    if (!result) {
       return res.status(404).json({ msg: "Order not found" });
     }
 
-    return res.status(200).json({ data: order });
+    return res.status(200).json({ data: result });
   } catch (err) {
     res.status(500).json({
       msg: "Something went wrong",
@@ -75,13 +75,12 @@ const getSingleOrder = async (req: Request, res: Response) => {
   }
 };
 
-// Update order status (for seller and customer)
 const updateOrderStatus = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // Order ID
-    const { status } = req.body; // New status
-    const userId = req.user?.id; // Logged-in user ID
-    const role = req.user?.role as userRole; // User role
+    const { id } = req.params;
+    const { status } = req.body; 
+    const userId = req.user?.id;
+    const role = req.user?.role as userRole; 
 
     const updatedOrder = await orderService.updateOrderStatus(
       id as string,
