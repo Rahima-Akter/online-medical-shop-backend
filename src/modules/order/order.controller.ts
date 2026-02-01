@@ -2,16 +2,43 @@ import { Request, Response } from "express";
 import { orderService } from "./order.service";
 import { userRole } from "../../middleware/middleare";
 
-// Get all orders for a user (admin, seller, customer)
+export const createOrder = async (req: Request, res: Response) => {
+  try {
+    const { customerId, items, shippingAddress } = req.body;
+
+    if (!customerId || !items || items.length === 0) {
+      return res.status(400).json({ msg: "Invalid request data" });
+    }
+
+    const result = await orderService.createOrder(
+      customerId,
+      items,
+      shippingAddress,
+    );
+
+    return res.status(201).json({
+       msg: "Order Placed successfully",
+      data: result,
+    });
+    
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      msg: "Something went wrong",
+      error: err instanceof Error ? err.message : "Internal Server Error",
+    });
+  }
+};
+
 const getAllOrders = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id; // Assuming req.user is populated
-    const role = req.user?.role as userRole; // Assuming role is available in req.user
+    const userId = req.user?.id; 
+    const role = req.user?.role as userRole;
 
     const orders = await orderService.getAllOrders(
       role,
       userId as string,
-      req.query
+      req.query,
     );
 
     return res.status(200).json(orders);
@@ -23,12 +50,11 @@ const getAllOrders = async (req: Request, res: Response) => {
   }
 };
 
-// Get a single order (admin, seller, customer)
 const getSingleOrder = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // Order ID
-    const userId = req.user?.id; // Logged-in user ID
-    const role = req.user?.role as userRole; // User role
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const role = req.user?.role as userRole;
 
     const order = await orderService.getSingleOrder(
       id as string,
@@ -83,6 +109,7 @@ const updateOrderStatus = async (req: Request, res: Response) => {
 };
 
 export const orderController = {
+  createOrder,
   getAllOrders,
   getSingleOrder,
   updateOrderStatus,

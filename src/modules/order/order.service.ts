@@ -1,22 +1,76 @@
-import { Request } from "express";
 import { OrderStatus } from "../../../generated/prisma/enums";
 import paginationAndSortingHelper from "../../helper/paginationAndSortingHelper";
 import { prisma } from "../../lib/prisma";
 import { userRole } from "../../middleware/middleare";
 
-// Get all orders for seller, customer, or admin
+export const createOrder = async (customerId: string, items: any[], shippingAddress: string) => {
+  if (!items || items.length === 0) {
+    throw new Error("Order must have at least one item");
+  }
+
+  let totalAmount = 0;
+
+  const orderItems = items.map(async (item) => {
+    const medicine = await prisma.medicine.findUnique({
+      where: { id: item.medicineId },
+    });
+
+    if (!medicine) {
+      throw new Error(`Medicine with ID ${item.medicineId} not found`);
+    }
+
+    const itemTotalPrice = medicine.price * item.quantity;
+    totalAmount += itemTotalPrice;
+
+    return {
+      medicineId: item.medicineId,
+      sellerId: item.sellerId,
+      quantity: item.quantity,
+      price: medicine.price,
+    };
+  });
+
+  const orderItemsPromise = await Promise.all(orderItems);
+
+  const order = await prisma.order.create({
+    data: {
+      customerId,
+      shippingAddress: shippingAddress,
+      totalPrice: totalAmount,
+      status: OrderStatus.PLACED,  
+      items: {
+        create: orderItemsPromise, 
+      },
+    },
+    include: {
+      items: true,
+    },
+  });
+
+  for (const item of orderItemsPromise) {
+    await prisma.medicine.update({
+      where: {
+        id: item.medicineId,
+      },
+      data: {
+        stock: { decrement: item.quantity },
+      },
+    });
+  }
+
+  return order;
+};
+
 const getAllOrders = async (role: userRole, userId: string, query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationAndSortingHelper(query);
 
   if (role === userRole.SELLER) {
-    // Seller sees orders that contain their products
     const orders = await prisma.order.findMany({
       where: {
         items: {
-          // Explicitly matching order items to the seller's product
           every: {
-            sellerId: userId, // This checks if every order item has the seller's ID
+            sellerId: userId, // CHECKS FOR SELLER ID
           },
         },
       },
@@ -24,7 +78,7 @@ const getAllOrders = async (role: userRole, userId: string, query: any) => {
         [sortBy]: sortOrder,
       },
       include: {
-        items: true, // Include order items (product details)
+        items: true,
       },
     });
 
@@ -32,7 +86,7 @@ const getAllOrders = async (role: userRole, userId: string, query: any) => {
       where: {
         items: {
           every: {
-            sellerId: userId, // Explicit check for all items belonging to the seller
+            sellerId: userId, // CHECKS FOR SELLER ID
           },
         },
       },
@@ -48,7 +102,6 @@ const getAllOrders = async (role: userRole, userId: string, query: any) => {
   }
 
   if (role === userRole.CUSTOMER) {
-    // Customer sees their own orders
     const orders = await prisma.order.findMany({
       where: { customerId: userId },
       skip,
@@ -74,10 +127,7 @@ const getAllOrders = async (role: userRole, userId: string, query: any) => {
   }
 
   if (role === userRole.ADMIN) {
-    // Admin can see all orders
     const orders = await prisma.order.findMany({
-      skip,
-      take,
       orderBy: {
         [sortBy]: sortOrder,
       },
@@ -100,7 +150,6 @@ const getAllOrders = async (role: userRole, userId: string, query: any) => {
   throw new Error("Forbidden: You don't have permission to view orders");
 };
 
-// Get a single order (Admin, Seller, or Customer)
 const getSingleOrder = async (
   orderId: string,
   userId: string,
@@ -109,18 +158,17 @@ const getSingleOrder = async (
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      items: true, // Include order items (medicine details)
+      items: true,
     },
   });
 
   if (!order) return null;
 
   if (role === userRole.ADMIN) {
-    return order; // Admin can see any order
+    return order; 
   }
 
   if (role === userRole.SELLER) {
-    // Seller can view the order only if it's associated with their product
     const orderItemBelongsToSeller = order.items.some(
       (item) => item.sellerId === userId,
     );
@@ -130,13 +178,12 @@ const getSingleOrder = async (
   }
 
   if (role === userRole.CUSTOMER && order.customerId === userId) {
-    return order; // Customer can only view their own orders
+    return order; 
   }
 
-  return null; // If none of the above conditions match
+  return null;
 };
 
-// Update the status of an order
 const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
@@ -158,7 +205,7 @@ const updateOrderStatus = async (
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      items: true, // Include order items (medicine details)
+      items: true,
     },
   });
 
@@ -166,7 +213,7 @@ const updateOrderStatus = async (
     throw new Error("Order not found");
   }
 
-  // Seller can update status if the order contains their products
+  // check seller
   if (role === userRole.SELLER) {
     const orderItemBelongsToSeller = order.items.some(
       (item) => item.sellerId === userId,
@@ -179,23 +226,32 @@ const updateOrderStatus = async (
     }
   }
 
-  // Customer can only cancel their own orders
-  if (
-    role === userRole.CUSTOMER &&
-    order.customerId === userId &&
-    status === OrderStatus.CANCELLED
-  ) {
+  // check customer
+  if ( role === userRole.CUSTOMER && order.customerId === userId && status === OrderStatus.CANCELLED ) {
+    // Add stock back to the medicines in the cancelled order
+    for (const item of order.items) {
+      await prisma.medicine.update({
+        where: { id: item.medicineId },
+        data: {
+          stock: {
+            increment: item.quantity,
+          },
+        },
+      });
+    }
+
     return prisma.order.update({
       where: { id: orderId },
       data: { status },
     });
   }
 
-  // If none of the above conditions match, return null
   return null;
 };
 
+
 export const orderService = {
+  createOrder,
   getAllOrders,
   getSingleOrder,
   updateOrderStatus,

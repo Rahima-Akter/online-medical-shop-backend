@@ -129,7 +129,7 @@ const getAllMedicine = async (
     where
   });
   return {
-    Data:result,
+    data:result,
     total: totalMed,
     currentPage: page,
     limit,
